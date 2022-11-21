@@ -13,7 +13,6 @@ from bs4 import BeautifulSoup
 def notify_discord(destination, message):
     webhook = DiscordWebhook(url=destination, content=message)
     response = webhook.execute()
-    print(response)
 
 def metar(url):
     data = []
@@ -251,7 +250,5 @@ while True is True:
 
         notify_discord(localwx_url, localwx)
     
-
-    print(flight_restrictions(fr_url))
-    print("Loop!")
+    #print("Loop!")
     time.sleep(180)
