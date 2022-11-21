@@ -157,6 +157,7 @@ localwx_url = "https://ptb.discord.com/api/webhooks/1042925802897019042/TtVMWLJ3
 fr_fixed_wing_url = "https://ptb.discord.com/api/webhooks/986658093997891625/HOuVGxp1mZ5ska5o1dSWkvyMoKd2P10taXkEVVcbjbKzUJctfgeQLY14jonqDhl9jBxD"
 fr_helicopter_url = "https://ptb.discord.com/api/webhooks/1000226481303191622/DzOnU1P76mO6lTKGvEzirGsVxon9mwbjatEVZVcgr4NZs1zBVqdXU0MBec_u0IRU4iKD"
 fr_uas_url = "https://ptb.discord.com/api/webhooks/1000226561317945404/7a-R7291ycVlfMEBEI4LqomK-zL9ZrNzHtoce-ONIlqJpiAinCRBqxSP1Un72TEgr-Hi"
+fr_autowx_url = "https://ptb.discord.com/api/webhooks/1014962731662704742/ITlfBlo4V_oOP-ETHjE3d6TMhoSj5F-Fx9bDCncVNeHUaI19VYmJoXCUSu8-57vaWWx4"
 
 # AWC Text Data Server URLs
 gfk_url = "https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString=KGFK"
@@ -236,7 +237,7 @@ while True is True:
     # AutoWX Flight Restrictions
     if autowx_time[0] == 'True' and autowx_time != autowx_time_last:
         autowx_time_last = autowx_time
-        notify_discord(test_url, autowx)
+        notify_discord(fr_autowx_url, autowx)
 
 
     # Local Weather Channel
@@ -248,7 +249,11 @@ while True is True:
         ckn_last = ckn
         gaf_last = gaf
 
-        notify_discord(localwx_url, localwx)
+        #notify_discord(localwx_url, localwx)
     
-    #print("Loop!")
+    # Status Chek (Edit to Send Message every 6 hours at some point)
+    status = "Server Online"
+    notify_discord(test_url, status)
+
+    # Wait 3 miutes than run agian
     time.sleep(180)
