@@ -1,2 +1,3 @@
 # und_discord
-Code for my UND Flight Restrictions Discord Server
+Contians code used to automate the UND Aerospace discord
+Contact: nicolo.taylor@und.edu
