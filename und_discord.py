@@ -145,7 +145,7 @@ def fr_autowx(url, count):
         # AutoWX end of day
         elif eod and test in data:
             result[0] = "True"
-            result[1] = "End of Day"
+            result[1] = "end of day"
             return result
         i += 1
     return "False"
@@ -211,6 +211,7 @@ while True is True:
     helicopter = "<@&986723294742986792>: {}".format(fr_live[1])
     uas = "<@&986723383976796210>: {}".format(fr_live[2])
     autowx = "Auto Weather active till {}LCL".format(autowx_time[1])
+    autowx_day = "Auto Weather active till {}".format(autowx_time[1])
 
     # Testing for changes to data and updating Discord if data has changed
     # Fixed Wing Flight Restrictions
@@ -237,7 +238,10 @@ while True is True:
     # AutoWX Flight Restrictions
     if autowx_time[0] == 'True' and autowx_time != autowx_time_last:
         autowx_time_last = autowx_time
-        notify_discord(fr_autowx_url, autowx)
+        if autowx_time[1] == "end of day":
+            notify_discord(fr_autowx_url, autowx_day)
+        else:
+            notify_discord(fr_autowx_url, autowx)
 
 
     # Local Weather Channel
