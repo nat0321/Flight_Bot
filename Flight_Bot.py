@@ -1,6 +1,5 @@
+# Flight Bot by Nicolo Taylor
 # UND Aerospace Discord
-# Local Weather Automation
-# Nicolo Taylor
 # nicolo.taylor@und.edu
 
 #import requests
@@ -96,7 +95,7 @@ def fr_autowx(url, count):
     i = 4
     count = int(count) + 4
     result = ["False", 9999]
-    # Strings to test agiants
+    # Strings to test against
     autowx = "at or before"
     eod = "rest of the"
     test = "removed"
