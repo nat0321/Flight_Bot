@@ -82,27 +82,6 @@ def flight_restrictions(url):
     output.append(data)
     return output
 
-def fr_fixed_wing(url):
-    # Getting data
-    data = requests.get(url)
-    html = BeautifulSoup(data.text, 'html.parser')
-    data = html.select('.auto-style1b')[0].get_text()
-    return data
-
-def fr_helicopter(url):
-    # Getting data
-    data = requests.get(url)
-    html = BeautifulSoup(data.text, 'html.parser')
-    data = html.select('.auto-style2b')[0].get_text()
-    return data
-
-def fr_uas(url):
-    # Getting data
-    data = requests.get(url)
-    html = BeautifulSoup(data.text, 'html.parser')
-    data = html.select('.auto-style3b')[0].get_text()
-    return data
-
 def fr_notes(url, line):
     line = int(line)
     line_c = line + 3
@@ -151,6 +130,10 @@ def fr_autowx(url, count):
     return "False"
 
 # Main Function
+# Configuration Varables
+delay = 180 #Adjusts how often the program is updated in seconds
+test_mode = "True"
+
 # Discord Webhook URLs
 test_url = "https://ptb.discord.com/api/webhooks/1044129561455112225/K0W5IOj2_i6f2JjSw6NrWDR0huRxus3RVSiN2HCEBF1JTahK1fsyya7kw061gP6BvzLJ"
 localwx_url = "https://ptb.discord.com/api/webhooks/1042925802897019042/TtVMWLJ31Pklta45lCcxD1U_7bk9bV2vwIx9yhsGGWY4Lfs5TtoC-L7OjFpjs3k213wo"
@@ -184,7 +167,7 @@ helicopter_last = " "
 uas_last = " "
 autowx_time_last = 9999
 
-# Infinate loop to keep program always online
+# Continually running section of the program
 while True is True:
     # Clearing lists
     gfk.clear()
@@ -260,4 +243,4 @@ while True is True:
     notify_discord(test_url, status)
 
     # Wait 3 miutes than run agian
-    time.sleep(180)
+    time.sleep(delay)
