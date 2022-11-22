@@ -63,6 +63,8 @@ def metar_raw(url):
 
     # Pulling required data
     data = bs_data.find('raw_text')
+    if data is None:
+        data = "unavalible"
 
     raw_xml.close()
 
@@ -164,6 +166,7 @@ gaf_last = []
 fixedwing_last = " "
 helicopter_last = " "
 uas_last = " "
+gfk_raw_last = " "
 autowx_time_last = 9999
 
 # Continually running section of the program
@@ -179,6 +182,7 @@ while True is True:
     rdr = metar(rdr_url)
     ckn = metar(ckn_url)
     gaf = metar(gaf_url)
+    gfk_raw = metar_raw(gfk_url)
 
     # Pulling flight restriction data
     fr_live = flight_restrictions(fr_url)
@@ -225,6 +229,11 @@ while True is True:
         else:
             notify_discord(fr_autowx_url, autowx)
 
+    # GFK Raw METAR
+    if gfk_raw != gfk_raw_last:
+        gfk_raw_last = gfk_raw
+
+        notify_discord(test_url, gfk_raw)
 
     # Local Weather Channel
     if gfk != gfk_last or rdr != rdr_last or ckn != ckn_last or gaf != gaf_last:
