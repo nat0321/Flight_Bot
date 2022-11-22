@@ -192,8 +192,8 @@ while True is True:
     fixedwing = "<@&986672387040874577>: {}".format(fr_live[0])
     helicopter = "<@&986723294742986792>: {}".format(fr_live[1])
     uas = "<@&986723383976796210>: {}".format(fr_live[2])
-    autowx = "Auto Weather active till {}LCL".format(autowx_time[1])
-    autowx_day = "Auto Weather active till {}".format(autowx_time[1])
+    autowx = "<@&1014969092102430791>: Auto Weather active till {}LCL".format(autowx_time[1])
+    autowx_day = "<@&1014969092102430791>: Auto Weather active till {}".format(autowx_time[1])
 
     # Testing for changes to data and updating Discord if data has changed
     # Fixed Wing Flight Restrictions
@@ -238,8 +238,8 @@ while True is True:
         #notify_discord(localwx_url, localwx)
     
     # Status Chek (Edit to Send Message every 6 hours at some point)
-    status = "Server Online"
-    notify_discord(test_url, status)
+    #status = "Server Online"
+    #notify_discord(test_url, status)
 
     # Wait 3 miutes than run agian
     time.sleep(delay)
