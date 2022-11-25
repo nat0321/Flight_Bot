@@ -1,3 +1,3 @@
 <h1 align="center">Flight Bot</h1>
-<p>Contians code used to automate the UND Aerospace discord</p>
+<p>The code behind Flight Bot. A bot for monitoring specific flight and airport data for University of North Dakota Aerospace pilots!</p>
 <p>Contact: nicolo.taylor@und.edu</P>
