@@ -22,7 +22,7 @@ gaf_url = "https://aviationweather.gov/adds/dataserver_current/httpparam?dataSou
 fr_url = "https://aims-asp.aero.und.edu/sof2/sof2.aspx?site=U"
 
 # Making Varables
-gfk = ["Maybe?"]
+gfk = []
 rdr = []
 ckn = []
 gaf = []
@@ -51,9 +51,10 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    await bot.process_commands(message)
     if message.author == bot.user:
         return
+    await bot.process_commands(message)
+
     
     username = str(message.author.name)
     user_message = str(message.content)
@@ -63,15 +64,23 @@ async def on_message(message):
 async def status(ctx):
     await ctx.send(f"Flight Bot is **ONLINE**! Ping: {round(bot.latency * 1000)}ms")
 
+    print("Status Sent!")
+
 @bot.command(aliases=["metar", "METAR"])
 async def metar_cmd(ctx, *, question):
     url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={question}"
     metar = metar_raw(url)
     await ctx.send(metar)
 
-    print("Worked!")
+    print("METAR Sent!")
 
-@tasks.loop(seconds=10)
+@bot.command()
+async def restrictions(ctx):
+    fr = flight_restrictions(fr_url)
+    frf = f"**UND Flight Restrictions**\n> Fixed Wing: {fr[0]}\n> Helicopter: {fr[1]}\n> UAS: {fr[2]}"
+    await ctx.send(frf)
+
+@tasks.loop(seconds=60)
 async def data_collection():
     # Defining Global Varables
     global gfk
@@ -90,6 +99,10 @@ async def data_collection():
 
     # Discord Channels
     test_ch = bot.get_channel(1044129340432056361)
+    fixedwing_ch = bot.get_channel(986657152301154304)
+    helicopter_ch = bot.get_channel(1000226423719592017)
+    uas_ch = bot.get_channel(986722254639489164)
+    autowx_ch = bot.get_channel(1014962694387941467)
 
     # Clearing lists
     gfk.clear()
@@ -122,29 +135,29 @@ async def data_collection():
         # Storing last posted values
         fixedwing_last = fr_live[0]
 
-        #notify_discord(fr_fixed_wing_url, fixedwing)
+        #await fixedwing_ch.send(fixedwing)
 
     # Helicopter Flight Restrictions
     if fr_live[1] != helicopter_last:
         # Storing last posted values
         helicopter_last = fr_live[1]
 
-        #notify_discord(fr_helicopter_url, helicopter)
+        #await helicopter_ch.send(helicopter)
 
     # UAS Flight Restrictions
     if fr_live[2] != uas_last:
         # Storing last posted values
         uas_last = fr_live[2]
 
-        await test_ch.send(uas)
+        #await test_ch.send(uas)
 
     # AutoWX Flight Restrictions
     if autowx_time[0] == 'True' and autowx_time != autowx_time_last:
         autowx_time_last = autowx_time
         #if autowx_time[1] == "end of day":
-            #notify_discord(fr_autowx_url, autowx_day)
+            #await autowx_ch.send(autowx_day)
         #else:
-            #notify_discord(fr_autowx_url, autowx)
+            #await autowx_ch.send(autowx)
 
     # GFK Raw METAR
     if gfk_raw != gfk_raw_last:
