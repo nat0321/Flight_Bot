@@ -82,6 +82,22 @@ def fr_notes(url, line):
     data = html.select(selection)[0].get_text()
     return data
 
+def fr_notes_all(url):
+    data = requests.get(url)
+    html = BeautifulSoup(data.text, 'html.parser')
+
+    while True:
+        i = 3
+        num = 0
+        selection = ".auto-style{}".format(i)
+        try:
+            data[num] = html.select(selection)[0].get_text()
+        except IndexError:
+            count = i - 3
+            return count, data
+        i += 1
+
+
 def fr_autowx(url, count):
     i = 4
     count = int(count) + 4
