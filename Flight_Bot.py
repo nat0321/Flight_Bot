@@ -38,10 +38,10 @@ uas_last = " "
 gfk_raw_last = " "
 autowx_time_last = 9999
 
-#client = discord.Client(command_prefix="!", intents=discord.Intents.all())
-#bot = discord.commands.Bot(command_prefix = "!")
+# Making the bot
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
+bot.remove_command("help")
 
 @bot.event
 async def on_ready():
@@ -67,18 +67,45 @@ async def status(ctx):
     print("Status Sent!")
 
 @bot.command(aliases=["metar", "METAR"])
-async def metar_cmd(ctx, *, question):
-    url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={question}"
-    metar = metar_raw(url)
-    await ctx.send(metar)
-
-    print("METAR Sent!")
+async def metar_cmd(ctx, *, airport):
+    url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={airport}"
+    if len(airport) < 4 or len(airport) > 4:
+        await ctx.send("Please use four letter identifier. (Eg. KGFK & KRSW)")
+        return
+    try:
+        metar = metar_raw(url)
+        await ctx.send(metar)
+        print("METAR Sent!")
+        return
+    except:
+        await ctx.send("Airport not found :cry:")
+        return
 
 @bot.command()
 async def restrictions(ctx):
     fr = flight_restrictions(fr_url)
     frf = f"**UND Flight Restrictions**\n> Fixed Wing: {fr[0]}\n> Helicopter: {fr[1]}\n> UAS: {fr[2]}"
     await ctx.send(frf)
+
+@bot.command(pass_context=True)
+async def help(ctx):
+    author = ctx.message.author
+
+    embed = discord.Embed(
+        colour = discord.Colour.orange()
+    )
+
+    embed.set_author(name="Help")
+    embed.add_field(name="!status", value="Returns bots status and ping time", inline=False)
+    embed.add_field(name="!restrictions", value="Returns the current UND Flight Restrictions", inline=False)
+    embed.add_field(name="!metar <ICAO Code>", value="Returns the current metar for the requested airport", inline=False)
+
+    await ctx.author.send(embed=embed)
+
+
+@bot.command()
+async def meow(ctx):
+    await ctx.send("Hello Tatanka!")
 
 @tasks.loop(seconds=60)
 async def data_collection():
@@ -135,7 +162,7 @@ async def data_collection():
         # Storing last posted values
         fixedwing_last = fr_live[0]
 
-        #await fixedwing_ch.send(fixedwing)
+        await fixedwing_ch.send(fixedwing)
 
     # Helicopter Flight Restrictions
     if fr_live[1] != helicopter_last:
@@ -149,15 +176,15 @@ async def data_collection():
         # Storing last posted values
         uas_last = fr_live[2]
 
-        #await test_ch.send(uas)
+        await uas_ch.send(uas)
 
     # AutoWX Flight Restrictions
     if autowx_time[0] == 'True' and autowx_time != autowx_time_last:
         autowx_time_last = autowx_time
-        #if autowx_time[1] == "end of day":
-            #await autowx_ch.send(autowx_day)
-        #else:
-            #await autowx_ch.send(autowx)
+        if autowx_time[1] == "end of day":
+            await autowx_ch.send(autowx_day)
+        else:
+            await autowx_ch.send(autowx)
 
     # GFK Raw METAR
     if gfk_raw != gfk_raw_last:
