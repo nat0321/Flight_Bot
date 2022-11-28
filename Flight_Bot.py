@@ -169,7 +169,7 @@ async def data_collection():
         # Storing last posted values
         helicopter_last = fr_live[1]
 
-        #await helicopter_ch.send(helicopter)
+        await helicopter_ch.send(helicopter)
 
     # UAS Flight Restrictions
     if fr_live[2] != uas_last:
