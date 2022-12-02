@@ -82,21 +82,47 @@ def fr_notes(url, line):
     data = html.select(selection)[0].get_text()
     return data
 
+def fr_notes_b(url, line):
+    line = int(line)
+    line_c = line + 3
+    selection = ".auto-style{}b".format(line_c)
+    # Getting data
+    data = requests.get(url)
+    html = BeautifulSoup(data.text, 'html.parser')
+    data = html.select(selection)[0].get_text()
+    return data
+
 def fr_notes_all(url):
     data = requests.get(url)
     html = BeautifulSoup(data.text, 'html.parser')
 
-    while True:
-        i = 3
-        num = 0
-        selection = ".auto-style{}".format(i)
+    output = [0]
+    i =4
+    while i < 10:
+        selection = f".auto-style{i}"
         try:
-            data[num] = html.select(selection)[0].get_text()
+            data = html.select(selection)[0].get_text()
         except IndexError:
-            count = i - 3
-            return count, data
+            break
+        output.append(data)
         i += 1
+    output[0] = i - 4 #Kept changing this between 2 & 4 something not right
+    return output
 
+def fr_notes_count(url):
+    data = requests.get(url)
+    html = BeautifulSoup(data.text, 'html.parser')
+
+    i = 4
+    while i < 10:
+        selection = f".auto-style{i}"
+        try:
+            data = html.select(selection)[0].get_text()
+        except IndexError:
+            break
+        i += 1
+    i = i - 4 #Kept changing this between 2 & 4 something not right
+    return i
 
 def fr_autowx(url, count):
     i = 4
@@ -134,3 +160,29 @@ def fr_autowx(url, count):
             return result
         i += 1
     return "False"
+
+def pressure_altitude(url):
+    # Replace other metar bot on home assistant
+    data = "unavalible"
+    # Pulling web XML file
+    raw_xml = urllib.request.urlopen(url)
+    raw_data = raw_xml.read()
+
+    # Parsing XML file
+    bs_data = BeautifulSoup(raw_data, "xml")
+
+    # Pulling required data
+    data = bs_data.find('altim_in_hg')
+    if data is None:
+        data = "unavalible"
+
+    raw_xml.close()
+
+    f_press = float(data.text)
+    s_press = 29.92
+    f_elev = 845
+
+    press_c = f_press - s_press
+    elev_c = press_c * 1000
+    p_alt = elev_c + f_elev
+    return p_alt

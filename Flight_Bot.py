@@ -2,10 +2,13 @@
 from flight_data import *
 import time
 import requests
+import json
+from contextlib import closing
 import urllib.request
+from urllib.request import urlopen, URLError
 import discord
+from discord import app_commands
 from discord.ext import commands, tasks
-from discord_webhook import DiscordWebhook
 from bs4 import BeautifulSoup
 
 # bot link
@@ -47,39 +50,63 @@ bot.remove_command("help")
 async def on_ready():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight Restrictions"))
     data_collection.start()
+    adsb_loop.start()
     print(f"Logged in as {bot.user}")
-
+    try:
+        synced = await bot.tree.sync()
+        print(f"{len(synced)} commands synced!")
+    except:
+        print("A sync error occured")
+    
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
     await bot.process_commands(message)
 
+    if bot.user.mentioned_in(message):
+        await message.channel.send("Hello!\nYou can type `!help` for more info")
+
     
     username = str(message.author.name)
     user_message = str(message.content)
     channel = str(message.channel.name)
 
-@bot.command(aliases=["STATUS"])
-async def status(ctx):
-    await ctx.send(f"Flight Bot is **ONLINE**! Ping: {round(bot.latency * 1000)}ms")
-
-    print("Status Sent!")
-
-@bot.command(aliases=["metar", "METAR"])
-async def metar_cmd(ctx, *, airport):
+@bot.tree.command(name="metar", description="Get airport raw METAR data")
+async def metar_cmd(interaction: discord.interactions, airport: str):
     url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={airport}"
     if len(airport) < 4 or len(airport) > 4:
-        await ctx.send("Please use four letter identifier. (Eg. KGFK & KRSW)")
+        await interaction.response.send_message("Please use four letter identifier. (Eg. KGFK & KRSW)")
         return
     try:
         metar = metar_raw(url)
-        await ctx.send(metar)
+        await interaction.response.send_message(metar)
         print("METAR Sent!")
         return
     except:
-        await ctx.send("Airport not found :cry:")
+        await interaction.response.send_message("Airport not found :cry:")
         return
+
+@bot.tree.command(name="status", description="Get Flight Bot status")
+async def status(interaction: discord.Integration):
+    await interaction.response.send_message(f"Flight Bot is **ONLINE**! Ping: {round(bot.latency * 1000)}ms")
+
+    print("Status Sent!")
+
+#@bot.command(aliases=["metar", "METAR"])
+#async def metar_cmd(ctx, *, airport):
+#    url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={airport}"
+#    if len(airport) < 4 or len(airport) > 4:
+#        await ctx.send("Please use four letter identifier. (Eg. KGFK & KRSW)")
+#        return
+#    try:
+#        metar = metar_raw(url)
+#        await ctx.send(metar)
+#        print("METAR Sent!")
+#        return
+#    except:
+#        await ctx.send("Airport not found :cry:")
+#        return
 
 @bot.command()
 async def restrictions(ctx):
@@ -102,6 +129,45 @@ async def help(ctx):
 
     await ctx.author.send(embed=embed)
 
+@bot.command()
+async def notes(ctx):
+    data = fr_notes_all(fr_url)
+    i = 1
+    embed = discord.Embed(
+        colour = discord.Colour.blue()
+    )
+    embed.set_author(name="Flight Restriction Notes")
+    while i <= data[0] - 2:
+        embed.add_field(name=f"Note {i}", value=data[i], inline=False)
+        i += 1
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def staff(ctx):
+    count = fr_notes_count(fr_url)
+    mod_n = count - 1
+    mod = fr_notes_b(fr_url, mod_n)
+    sof = fr_notes_b(fr_url, count)
+
+    embed = discord.Embed(
+        colour = discord.Colour.blue()
+    )
+    embed.set_author(name="Airport Staff")
+    embed.add_field(name=f"MOD:", value=mod, inline=False)
+    embed.add_field(name=f"SOF:", value=sof, inline=False)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def count(ctx):
+    count = fr_notes_count(fr_url)
+    data = fr_notes_all(fr_url)
+    await ctx.send(f"Count: {count} Notes: {data[0]}")
+
+@bot.command()
+async def pa(ctx, *, airport):
+    url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={airport}"
+    pa = pressure_altitude(url)
+    await ctx.send(f"GFK Pressure Altitude: {pa}ft")
 
 @bot.command()
 async def meow(ctx):
@@ -162,35 +228,35 @@ async def data_collection():
         # Storing last posted values
         fixedwing_last = fr_live[0]
 
-        await fixedwing_ch.send(fixedwing)
+        #await fixedwing_ch.send(fixedwing)
 
     # Helicopter Flight Restrictions
     if fr_live[1] != helicopter_last:
         # Storing last posted values
         helicopter_last = fr_live[1]
 
-        await helicopter_ch.send(helicopter)
+        #await helicopter_ch.send(helicopter)
 
     # UAS Flight Restrictions
     if fr_live[2] != uas_last:
         # Storing last posted values
         uas_last = fr_live[2]
 
-        await uas_ch.send(uas)
+        #await uas_ch.send(uas)
 
     # AutoWX Flight Restrictions
     if autowx_time[0] == 'True' and autowx_time != autowx_time_last:
         autowx_time_last = autowx_time
-        if autowx_time[1] == "end of day":
-            await autowx_ch.send(autowx_day)
-        else:
-            await autowx_ch.send(autowx)
+        #if autowx_time[1] == "end of day":
+            #await autowx_ch.send(autowx_day)
+        #else:
+            #await autowx_ch.send(autowx)
 
     # GFK Raw METAR
     if gfk_raw != gfk_raw_last:
         gfk_raw_last = gfk_raw
 
-        await test_ch.send(gfk_raw)
+        #await test_ch.send(gfk_raw)
 
     # Local Weather Channel
     if gfk != gfk_last or rdr != rdr_last or ckn != ckn_last or gaf != gaf_last:
@@ -201,5 +267,22 @@ async def data_collection():
         ckn_last = ckn
         gaf_last = gaf
 
+@tasks.loop(seconds=120)
+async def adsb_loop():
+    test_ch = bot.get_channel(1044129340432056361)
+
+    url="http://192.168.2.30/tar1090/data/aircraft.json"
+    with closing(urlopen(url, None, 5.0)) as aircraft_file:
+        aircraft_data = json.load(aircraft_file)
+    
+    for a in aircraft_data['aircraft']:
+        hex = a.get('hex')
+        lat = a.get('lat')
+        lon = a.get('lon')
+        squawk = a.get('squawk')
+        tail = a.get('flight')
+        #if lat and lon:
+            #await test_ch.send(f"Tail: {tail} Squawk: {squawk}")
+            
 
 bot.run(TOKEN)
