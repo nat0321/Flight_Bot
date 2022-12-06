@@ -5,6 +5,8 @@ The code behind Flight Bot. A Discord bot for monitoring specific flight and air
 Coming Soon
 
 ## How to Host
+####Using Screen
+Screen Help: https://www.geeksforgeeks.org/screen-command-in-linux-with-examples/
 ### Enter and create a new Screen Session
 
 ```bash
