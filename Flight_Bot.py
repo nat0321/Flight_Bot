@@ -101,9 +101,7 @@ async def help(ctx):
     )
 
     embed.set_author(name="Help")
-    embed.add_field(name="!status", value="Returns bots status and ping time", inline=False)
-    embed.add_field(name="!restrictions", value="Returns the current UND Flight Restrictions", inline=False)
-    embed.add_field(name="!metar <ICAO Code>", value="Returns the current metar for the requested airport", inline=False)
+    embed.add_field(name="Slash Commands", value="Look in the slash commands menu to see all commands", inline=False)
 
     await ctx.author.send(embed=embed)
 
@@ -208,38 +206,46 @@ async def data_collection():
     # Testing for changes to data and updating Discord if data has changed
     # Fixed Wing Flight Restrictions
     if fr_live[0] != fixedwing_last:
-        # Storing last posted values
-        fixedwing_last = fr_live[0]
-
-        #await fixedwing_ch.send(fixedwing)
+        if fixedwing_last == " ":
+            # Storing last posted values
+            fixedwing_last = fr_live[0]
+        else:
+            # Storing last posted values
+            fixedwing_last = fr_live[0]
+            # Posting to FR Fixed Wing channel
+            await fixedwing_ch.send(fixedwing)
 
     # Helicopter Flight Restrictions
     if fr_live[1] != helicopter_last:
-        # Storing last posted values
-        helicopter_last = fr_live[1]
-
-        #await helicopter_ch.send(helicopter)
+        if helicopter_last == " ":
+            # Storing last posted values
+            helicopter_last = fr_live[1]
+        else:
+            # Storing last posted values
+            helicopter_last = fr_live[1]
+            # Posting to FR Helicopter channel
+            await helicopter_ch.send(helicopter)
 
     # UAS Flight Restrictions
     if fr_live[2] != uas_last:
         # Storing last posted values
         uas_last = fr_live[2]
-
-        #await uas_ch.send(uas)
+        # Posting to FR UAS channel
+        await uas_ch.send(uas)
 
     # AutoWX Flight Restrictions
     if autowx_time[0] == 'True' and autowx_time != autowx_time_last:
         autowx_time_last = autowx_time
-        #if autowx_time[1] == "end of day":
-            #await autowx_ch.send(autowx_day)
-        #else:
-            #await autowx_ch.send(autowx)
+        if autowx_time[1] == "end of day":
+            await autowx_ch.send(autowx_day)
+        else:
+            await autowx_ch.send(autowx)
 
     # GFK Raw METAR
     if gfk_raw != gfk_raw_last:
         gfk_raw_last = gfk_raw
 
-        #await test_ch.send(gfk_raw)
+        await test_ch.send(gfk_raw)
 
     # Local Weather Channel
     if gfk != gfk_last or rdr != rdr_last or ckn != ckn_last or gaf != gaf_last:
@@ -260,7 +266,7 @@ async def adsb_loop():
     with closing(urlopen(config.adsb_url, None, 5.0)) as aircraft_file:
         aircraft_data = json.load(aircraft_file)
     
-    print(f"Scanning {len(aircraft_data['aircraft'])} aircraft")
+#    print(f"Scanning {len(aircraft_data['aircraft'])} aircraft")
     for plane in aircraft_data['aircraft']:
         hex = plane.get('hex')
         lat = plane.get('lat')
@@ -276,8 +282,8 @@ async def adsb_loop():
 ADSBX: https://globe.adsbexchange.com/?icao={hex}
 """
 
-                await test_ch.send(output)
-    print("Done")
+                await emergencies_ch.send(output)
+#    print("Done")
             
 
 bot.run(config.TOKEN)
