@@ -161,8 +161,9 @@ def fr_autowx(url, count):
         i += 1
     return "False"
 
-def pressure_altitude(url):
+def pressure_altitude(airport):
     # Replace other metar bot on home assistant
+    url = f"https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecent=true&stationString={airport}"
     data = "unavalible"
     # Pulling web XML file
     raw_xml = urllib.request.urlopen(url)
@@ -172,17 +173,24 @@ def pressure_altitude(url):
     bs_data = BeautifulSoup(raw_data, "xml")
 
     # Pulling required data
-    data = bs_data.find('altim_in_hg')
-    if data is None:
-        data = "unavalible"
+    altim = bs_data.find('altim_in_hg')
+    elev_m = bs_data.find('elevation_m')
+    if altim is None:
+        altim = "unavalible"
+        return altim
+    if elev_m is None:
+        elev_m = "unavalible"
+        return elev_m
+    
+    elev_f = float(elev_m.text) * 3.28084
 
     raw_xml.close()
 
-    f_press = float(data.text)
+    f_press = float(altim.text)
     s_press = 29.92
     f_elev = 845
 
     press_c = f_press - s_press
     elev_c = press_c * 1000
-    p_alt = elev_c + f_elev
-    return p_alt
+    pa = float(elev_c + elev_f)
+    return f"{airport} Pressure Altitude: {pa:.0f}ft"
