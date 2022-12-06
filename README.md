@@ -16,7 +16,7 @@ screen -R <name screen whatever you want>
 ### Start Program
 
 ```bash
-pipenv run python Flight_Bot.py
+python Flight_Bot.py
 ```
 
 ## Information
