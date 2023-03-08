@@ -39,6 +39,10 @@ uas_last = " "
 gfk_raw_last = " "
 autowx_time_last = 9999
 
+# ADS-B Storage
+calllast = "None"
+loopcount = 0
+
 # Making the bot
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -46,7 +50,8 @@ bot.remove_command("help")
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight Restrictions"))
+    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Flight Restrictions"))
+    await bot.change_presence(activity=discord.CustomActivity(name="Flight Restrictions"))
     data_collection.start()
     adsb_loop.start()
     print(f"Logged in as {bot.user}")
@@ -55,6 +60,11 @@ async def on_ready():
         print(f"{len(synced)} commands synced!")
     except:
         print("A sync error occured")
+    test_ch = bot.get_channel(1044129340432056361)
+    await test_ch.send(f"***{bot.user} has Started***")
+    await test_ch.send(f"{len(synced)} commands synced")
+
+
     
 @bot.event
 async def on_message(message):
@@ -92,9 +102,8 @@ async def restrictions(interaction: discord.interactions):
     frf = f"**UND Flight Restrictions**\n> Fixed Wing: {fr[0]}\n> Helicopter: {fr[1]}\n> UAS: {fr[2]}"
     await interaction.response.send_message(frf)
 
-@bot.command(pass_context=True)
-async def help(ctx):
-    author = ctx.message.author
+@bot.tree.command(name="help", description="Shows info and commands")
+async def help(interaction: discord.interactions):
 
     embed = discord.Embed(
         colour = discord.Colour.orange()
@@ -103,7 +112,7 @@ async def help(ctx):
     embed.set_author(name="Help")
     embed.add_field(name="Slash Commands", value="Look in the slash commands menu to see all commands", inline=False)
 
-    await ctx.author.send(embed=embed)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="notes", description="Gets current flight restriction notes")
 async def notes(interaction: discord.interactions):
@@ -137,6 +146,19 @@ async def staff(interaction: discord.interactions):
     embed.add_field(name=f"SOF:", value=sof, inline=False)
     await interaction.response.send_message(embed=embed)
 
+@bot.tree.command(name="update", description="Updates current flight restriction notifications")
+@commands.has_permissions(administrator=True)
+async def update(interaction: discord.interactions):
+    global fixedwing_last
+    global helicopter_last
+    global uas_last
+
+    fixedwing_last = 1
+    helicopter_last = 1
+    uas_last = 1
+
+    await interaction.response.send_message("Flight Restrictions Updating...")
+
 @bot.command()
 @commands.has_permissions(administrator=True)
 #@commands.has_any_role("Big Cheese", "Medium Cheese")
@@ -144,6 +166,13 @@ async def count(ctx):
     count = fr_notes_count(fr_url)
     data = fr_notes_all(fr_url)
     await ctx.send(f"Count: {count} Notes: {data[0]}")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def servers(ctx):
+  servers = list(bot.guilds)
+  await ctx.send(f"Connected on {str(len(servers))} servers:")
+  await ctx.send('\n'.join(guild.name for guild in servers))
 
 @bot.tree.command(name="pa", description="Get an airports pressure elivation")
 async def pa(interaction: discord.interactions, airport: str):
@@ -175,6 +204,7 @@ async def data_collection():
     test_ch = bot.get_channel(1044129340432056361)
     fixedwing_ch = bot.get_channel(986657152301154304)
     helicopter_ch = bot.get_channel(1000226423719592017)
+    uas_ch = bot.get_channel(986722254639489164)
     uas_ch = bot.get_channel(986722254639489164)
     autowx_ch = bot.get_channel(1014962694387941467)
 
@@ -258,15 +288,23 @@ async def data_collection():
 
 @tasks.loop(seconds=60)
 async def adsb_loop():
+    global loopcount
+    global calllast
+
+    
     emergencies_ch = bot.get_channel(1048503422430744596)
     test_ch = bot.get_channel(1044129340432056361)
 
     squawks = [7500, 7600, 7700]
 
+    if loopcount == 30:
+        loopcount = 0
+    else:
+        loopcount += 1
+
     with closing(urlopen(config.adsb_url, None, 5.0)) as aircraft_file:
         aircraft_data = json.load(aircraft_file)
     
-#    print(f"Scanning {len(aircraft_data['aircraft'])} aircraft")
     for plane in aircraft_data['aircraft']:
         hex = plane.get('hex')
         lat = plane.get('lat')
@@ -276,14 +314,17 @@ async def adsb_loop():
 
         if callsign and lat and lon and squawk:
             if int(squawk) in squawks:
-
-                output = f"""
-**{callsign}** Squawking {squawk}
-ADSBX: https://globe.adsbexchange.com/?icao={hex}
+                if callsign == calllast:
+                    break
+                else:
+                    calllast = callsign
+                    loopcount = 0
+                    output = f"""
+<@&1082898378393931776>: **{callsign}** Squawking: {squawk}
+ADS-B: https://adsb.nattech.xyz/?icao={hex}
 """
 
                 await emergencies_ch.send(output)
-#    print("Done")
             
 
 bot.run(config.TOKEN)
